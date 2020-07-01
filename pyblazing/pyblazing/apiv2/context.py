@@ -22,6 +22,7 @@ import socket
 import errno
 import subprocess
 import os
+import platform
 import re
 import pandas
 import numpy as np
@@ -53,7 +54,16 @@ jpype.addClassPath(
         os.getenv("CONDA_PREFIX"),
         'lib/blazingsql-algebra-core.jar'))
 
-jvm_path=os.environ["CONDA_PREFIX"]+"/jre/lib/amd64/server/libjvm.so"
+arch = platform.machine()
+jvm_path=os.environ["CONDA_PREFIX"]+"/jre/lib/"+ arch + "/server/libjvm.so"
+
+if not os.path.exists(jvm_path):
+    if os.environ.get("JAVA_HOME"):
+        jvm_path=os.environ["JAVA_HOME"]+"/jre/lib/" + arch +"/server/libjvm.so"
+    else:
+        raise FileNotFoundError(
+        errno.ENOENT, os.strerror(errno.ENOENT), jvm_path)
+
 jpype.startJVM('-ea', convertStrings=False, jvmpath=jvm_path)
 
 ArrayClass = jpype.JClass('java.util.ArrayList')
